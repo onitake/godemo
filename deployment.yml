@@ -1,0 +1,101 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: godemo
+  labels:
+    app: godemo
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: godemo
+  namespace: godemo
+  labels:
+    app: godemo
+data:
+  OWNER: godemo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: godemo
+  namespace: godemo
+  labels:
+    app: godemo
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: godemo
+  template:
+    metadata:
+      labels:
+        app: godemo
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: godemo
+        image: gregorriepl/godemo
+        imagePullPolicy: Always
+        name: godemo
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: godemo
+  namespace: godemo
+  labels:
+    app: godemo
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: http
+  selector:
+    app: godemo
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: godemo
+  namespace: godemo
+  labels:
+    app: godemo
+  annotations:
+    kubernetes.io/tls-acme: "true"
+spec:
+  rules:
+  - host: godemo.my-kubernetes-cluster
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: godemo
+          servicePort: http
+  tls:
+  - secretName: godemo-letsencrypt
+    hosts:
+    - godemo.my-kubernetes-cluster
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: godemo
+  namespace: godemo
+  labels:
+    app: godemo
+spec:
+  endpoints:
+  - interval: 30s
+    path: /metrics
+    port: http
+  selector:
+    matchLabels:
+      app: godemo
