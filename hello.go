@@ -29,7 +29,7 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s %s 200", r.Host, r.Method, r.RequestURI)
-		w.Header().Add("Content-Type", "text/html")
+		w.Header().Add("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "<!DOCTYPE html><html><head><title>Container Demo</title></head><body><h1>Hello, %s!</h1><p>You are visitor %d</p></body></html>", owner, <-counter)
 	})
